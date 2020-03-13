@@ -1,3 +1,5 @@
+yarn.lock
+
 # OSX
 #
 .DS_Store
@@ -58,4 +60,4 @@ buck-out/
 # CocoaPods
 /ios/Pods/
 
-yarn.lock
+
