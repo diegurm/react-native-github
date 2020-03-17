@@ -14,7 +14,7 @@ import {
   Info,
   Title,
   Author,
-  Loading
+  Loading,
 } from './styles';
 import {ActivityIndicator, View, Text} from 'react-native';
 
@@ -26,24 +26,43 @@ export default class User extends Component {
   static propTypes = {
     navigation: PropTypes.shape({
       getParam: PropTypes.func,
+      navigate: PropTypes.func,
     }).isRequired,
   };
 
   state = {
     stars: [],
-    loading: false,
+    page: 1,
+    loading: true,
   };
 
   async componentDidMount() {
+    this.loadData();
+  }
+
+  loadData = async (page = 1) => {
+    const {stars} = this.state;
     const {navigation} = this.props;
     const user = navigation.getParam('user');
 
-    this.setState({loading: true});
+    const response = await api.get(`/users/${user.login}/starred`, {
+      params: {page},
+    });
 
-    const response = await api.get(`/users/${user.login}/starred`);
+    this.setState({
+      stars: page >= 2 ? [...stars, ...response.data] : response.data,
+      page,
+      loading: false,
+    });
+  };
 
-    this.setState({stars: response.data, loading: false});
-  }
+  loadMore = () => {
+    const {page} = this.state;
+
+    const nextPage = page + 1;
+
+    this.loadData(nextPage);
+  };
 
   render() {
     const {navigation} = this.props;
@@ -67,6 +86,8 @@ export default class User extends Component {
           <Stars
             data={stars}
             keyExtractor={star => String(star.id)}
+            onEndReachedThreshold={0.2}
+            onEndReached={this.loadMore}
             renderItem={({item}) => (
               <Starred>
                 <OwnerAvatar source={{uri: item.owner.avatar_url}} />
